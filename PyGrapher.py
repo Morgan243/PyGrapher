@@ -2,8 +2,8 @@
 # Import graphviz
 from optparse import OptionParser
 import sys
-sys.path.append('..')
-sys.path.append('/usr/lib/python2.7/site-packages/graphviz')
+#sys.path.append('..')
+#sys.path.append('/usr/lib/python2.7/site-packages/graphviz')
 #sys.path.append('/usr/lib/graphviz/python/')
 #sys.path.append('/usr/lib64/graphviz/python/')
 import gv
@@ -90,62 +90,29 @@ class PyGrapher:
         gv.layout(gvv, 'dot')
         gv.render(gvv, 'svg', svg_filename)
 
+def parseArguments(inputs, pngs, svgs):
 
-#f = open('graph_1.csv', 'r')
-#
-#nodes = list()
-#edges = list()
-#max_weight = 0
-## get unique nodes and lode the vertices into tuples
-#for line in f:
-#    # split on comma and strip any whitespace on the element
-#    elements = map(str.strip, line.split(','))
-#
-#    elements.append('fillcolor = red')
-#    edges.append(elements)
-#
-#    if int(elements[2]) > max_weight:
-#        max_weight = int(elements[2])
-#
-#    #print str(elements)
-#    if elements[0] not in nodes:
-#        nodes.append(elements[0])
-#
-#    if elements[1] not in nodes:
-#        nodes.append(elements[1])
-#
-#print str(nodes)
-#
-#gr = graph()
-#
-#for node in nodes:
-#    #gr.add_node(node,[('fillcolor', 'red')])
-#    gr.add_node(node)
-#    gr.add_node_attribute(node, ('fillcolor', "red"))
-#
-#threshold = 0
-#hue = .5
-#sat = 1.0
-#val = 1.0
-#for edge in edges:
-#    if int(edge[2]) > threshold:
-#        print "Adding: " + str(edge[0:2]) + " with weight: " + str(edge[2])
-#        norm_weight = float(edge[2])/max_weight
-#        gr.add_edge(edge[0:2], int(edge[2]), label=str(norm_weight))
-#        hue = 1.0 - norm_weight
-#        color_tuple = ('color', str(hue)+ " "+ " " + str(sat) + " " + str(val))
-#        penWidth_tuple = ('penwidth', str(norm_weight * 5))
-#        gr.add_edge_attribute((edge[0],edge[1]), color_tuple)
-#        gr.add_edge_attribute((edge[0],edge[1]), penWidth_tuple)
-#
-#
-#
-#dot = write(gr)
-#print "DOT: " + str(dot)
-#gvv = gv.readstring(dot)
-#gv.layout(gvv,'dot')
-#gv.render(gvv,'png','mpi.png')
-#gv.render(gvv,'svg','mpi.svg')
+    png_outs = None
+    svg_outs = None
+    ins = map(str.strip, inputs.split(','))
+    if pngs is not None:
+        png_outs = map(str.strip, pngs.split(','))
+
+    if svgs is not None:
+        svg_outs = map(str.strip, svgs.split(','))
+
+    file_tuples = list()
+    count = 0
+
+    for _in in ins:
+        file_tuples.append( (_in,
+                             png_outs[count] if png_outs != None else None,
+                             svg_outs[count] if svg_outs != None else None) )
+        count += 1
+
+    #return (ins, png_outs, svg_outs)
+    return file_tuples
+
 
 if __name__ == '__main__':
     parser = OptionParser()
@@ -167,12 +134,16 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
+    #(inputs, pngs, svgs) = parseArguments(options.input_csv_file, options.png_output, options.svg_output)
+    file_tuples = parseArguments(options.input_csv_file, options.png_output, options.svg_output)
+
     print "Making container..."
-    graph_container = GraphContainer(options.input_csv_file)
+    for file_tuple in file_tuples:
+        graph_container = GraphContainer(file_tuple[0])
 
-    grapher = PyGrapher(graph_container)
-    if options.svg_output is not None:
-        grapher.saveGraphPNG(options.svg_output)
+        grapher = PyGrapher(graph_container)
+        if options.svg_output is not None:
+            grapher.saveGraphSVG(file_tuple[2])
 
-    if options.png_output is not None:
-        grapher.saveGraphPNG(options.png_output)
+        if options.png_output is not None:
+            grapher.saveGraphPNG(file_tuple[1])
