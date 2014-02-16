@@ -27,7 +27,7 @@ class GraphContainer:
             # split on comma and strip any whitespace on the element
             elements = map(str.strip, line.split(','))
 
-            print "FOUND: " + str(elements)
+            #print "FOUND: " + str(elements)
 
             elements.append('fillcolor = red')
             self.edges.append(elements)
@@ -50,22 +50,15 @@ class PyGrapher:
 
         self.weight_thresh = 0
 
-        # edge coloring
-        self.e_hue = .5
-        self.e_sat = 1.0
-        self.e_val = 1.0
-
         self._buildGraph(self.graph_container)
 
     def _buildGraph(self, graph_container):
-        for node in self.graph_container.nodes:
-            self.gr.add_node(node)
-            print "Adding Nodes: " + str(node)
-            #gr.add_node_attribute(node, ('fillcolor', "red"))
-
-        hue = .5
         sat = 1.0
         val = 1.0
+        for node in self.graph_container.nodes:
+            self.gr.add_node(node)
+            #print "Adding Nodes: " + str(node)
+
         for edge in self.graph_container.edges:
             if float(edge[2]) > self.weight_thresh:
                 norm_weight = float(edge[2]) / self.graph_container.max_weight
@@ -110,7 +103,6 @@ def parseArguments(inputs, pngs, svgs):
                              svg_outs[count] if svg_outs != None else None) )
         count += 1
 
-    #return (ins, png_outs, svg_outs)
     return file_tuples
 
 
@@ -125,22 +117,19 @@ if __name__ == '__main__':
     parser.add_option("-i", "--input-csv", dest="input_csv_file", default = None,
                         help="Path to a fie containing line delimited csv of <node>,<node>,<edge weight>")
 
-#    parser.add_option("-l", "--listen-socks", dest="listen", action="store_true",default = False,
-#                        help="Only monitor listening sockets ('-l' option in netstat)")
-
     parser.add_option("-d", "--debug", dest="debug_on", default=False,
                         action="store_true",
                         help="Print data verbosely to the screen")
 
     (options, args) = parser.parse_args()
 
-    #(inputs, pngs, svgs) = parseArguments(options.input_csv_file, options.png_output, options.svg_output)
     file_tuples = parseArguments(options.input_csv_file, options.png_output, options.svg_output)
 
-    print "Making container..."
     for file_tuple in file_tuples:
+        print "Parsing input file " + file_tuple[0] + "..."
         graph_container = GraphContainer(file_tuple[0])
 
+        print "\tBuilding graph..."
         grapher = PyGrapher(graph_container)
         if options.svg_output is not None:
             grapher.saveGraphSVG(file_tuple[2])
